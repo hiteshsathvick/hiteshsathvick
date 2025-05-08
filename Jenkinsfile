@@ -1,17 +1,32 @@
 pipeline {
-    agent { label 'docker-agent' }
-
+    agent { 
+        node {
+            label 'local-agent'
+            }
+      }
     stages {
-        stage('Print Info') {
+        stage('Build') {
             steps {
-                echo 'Name: Hitesh Sathvick'
-                echo 'Roll No: 123456'
+                echo "Building.."
+                sh '''
+                echo "Building from Jenkins file"
+                '''
             }
         }
-
-        stage('Run Python') {
+        stage('Test') {
             steps {
-                sh 'python3 main.py'
+                echo "Testing.."
+                sh '''
+                echo "Testing the build triggered from Jenkins file."
+                '''
+            }
+        }
+        stage('Deliver') {
+            steps {
+                echo 'Deliver....'
+                sh '''
+                echo "doing delivery stuff.."
+                '''
             }
         }
     }
