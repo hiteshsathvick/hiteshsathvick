@@ -1,8 +1,8 @@
 pipeline {
-    agent { label 'docker-agent' }
+    agent any
 
     stages {
-        stage('Print Info') {
+        stage('Info') {
             steps {
                 echo 'Name: Hitesh Sathvick'
                 echo 'Roll No: 123456'
