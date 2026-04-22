@@ -1,0 +1,20 @@
+# Virtual environment - never push to GitHub
+.venv/
+venv/
+
+# Environment variables - never push to GitHub
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code settings
+.vscode/
+
+# Distribution
+*.egg-info/
+dist/
+build/
