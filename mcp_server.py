@@ -1,4 +1,8 @@
 from mcp.server.fastmcp import FastMCP
+from starlette.applications import Starlette
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.routing import Mount, Route
 import pandas as pd
 from typing import Optional
 import sys
@@ -102,7 +106,22 @@ def get_department_summary() -> dict:
     return {"department_summary": summary}
 
 
+# ─── Health Check ───
+async def health(request: Request):
+    return JSONResponse({"status": "ok", "message": "MCP Server is running"})
+
+
+# ─── Combine health + SSE ───
+app = Starlette(
+    routes=[
+        Route("/", health),
+        Route("/health", health),
+        Mount("/sse", app=mcp.sse_app()),
+    ]
+)
+
+
 # ─── Run ───
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8001))
-    uvicorn.run(mcp.sse_app(), host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port)
