@@ -1,0 +1,71 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "LLM Data Analysis API",
+    "description": "Salary filtering, statistics and prediction via natural language queries",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://hiteshsathvick.onrender.com"
+    }
+  ],
+  "paths": {
+    "/query": {
+      "post": {
+        "summary": "Handle Query",
+        "description": "Send a natural language query to analyze salary data. Examples: Show average salary in IT department, Predict salary for an employee, Show salary stats for active HR employees",
+        "operationId": "handleQuery",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "QueryRequest": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Natural language query about salary data"
+          }
+        }
+      },
+      "QueryResponse": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The original query"
+          },
+          "result": {
+            "type": "string",
+            "description": "The analysis result"
+          }
+        }
+      }
+    }
+  }
+}

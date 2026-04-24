@@ -5,7 +5,6 @@ from typing import Optional
 import sys
 import os
 
-# This ensures src/ is found correctly on Render too
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.pipeline import run_query
@@ -45,8 +44,6 @@ def root():
 @app.post("/query", response_model=QueryResponse)
 def handle_query(req: QueryRequest):
     """
-    Send a natural language query and get analysis results.
-
     Example queries:
     - "Predict salary for an employee"
     - "Show average salary in IT department"
