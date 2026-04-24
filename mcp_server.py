@@ -1,8 +1,4 @@
 from mcp.server.fastmcp import FastMCP
-from starlette.applications import Starlette
-from starlette.requests import Request
-from starlette.responses import JSONResponse
-from starlette.routing import Mount, Route
 import pandas as pd
 from typing import Optional
 import sys
@@ -13,11 +9,10 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.model import train_model, predict_salary
 
-# Initialize MCP server
+# Initialize MCP server with stateless mode for Copilot Studio
 mcp = FastMCP(
     "LLM Data Analysis MCP",
-    host="0.0.0.0",
-    port=8001
+    stateless_http=True
 )
 
 # Load data once at startup
@@ -31,7 +26,7 @@ def get_salary_stats(
     status: Optional[str] = None
 ) -> dict:
     """
-    Get salary statistics (mean, max, min) for employees.
+    Get salary statistics for employees.
     Filter by department: IT, HR, Finance.
     Filter by status: Active, Inactive.
     """
@@ -98,7 +93,7 @@ def list_employees(
 @mcp.tool()
 def get_department_summary() -> dict:
     """
-    Get a summary of all departments with employee count and salary stats.
+    Get a complete summary of all departments with salary stats.
     """
     summary = {}
     for dept in df["Department"].unique():
@@ -112,22 +107,11 @@ def get_department_summary() -> dict:
     return {"department_summary": summary}
 
 
-# ─── Health Check Route ───
-async def health(request: Request):
-    return JSONResponse({"status": "ok", "message": "MCP Server is running"})
-
-
-# ─── Combine health check + MCP into one Starlette app ───
-app = Starlette(
-    routes=[
-        Route("/", health),
-        Route("/health", health),
-        Mount("/mcp", app=mcp.streamable_http_app()),
-    ]
-)
-
-
 # ─── Run standalone ───
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8001))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(
+        mcp.streamable_http_app(),
+        host="0.0.0.0",
+        port=port
+    )
