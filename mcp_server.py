@@ -1,8 +1,4 @@
 from mcp.server.fastmcp import FastMCP
-from starlette.applications import Starlette
-from starlette.requests import Request
-from starlette.responses import JSONResponse
-from starlette.routing import Mount, Route
 import pandas as pd
 from typing import Optional
 import sys
@@ -13,13 +9,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.model import train_model, predict_salary
 
-# ✅ stateless_http=True fixes Copilot Studio JSON-RPC issue
-mcp = FastMCP(
-    "LLM Data Analysis MCP",
-    stateless_http=True
-)
+mcp = FastMCP("LLM Data Analysis MCP")
 
-# Load data once at startup
 df = pd.read_csv("data/dataset.csv")
 trained_model = train_model(df)
 
@@ -40,7 +31,7 @@ def get_salary_stats(
     if status:
         filtered_df = filtered_df[filtered_df["Status"] == status]
     if filtered_df.empty:
-        return {"error": "No employees found with given filters"}
+        return {"error": "No employees found"}
     return {
         "department": department or "All",
         "status": status or "All",
@@ -58,7 +49,7 @@ def predict_employee_salary(
 ) -> dict:
     """
     Predict salary for an employee.
-    experience_years: number of years of experience.
+    experience_years: years of experience.
     performance_score: rating from 1 to 5.
     """
     predicted = predict_salary(trained_model, experience_years, performance_score)
@@ -80,7 +71,7 @@ def list_employees(
     status: Optional[str] = None
 ) -> dict:
     """
-    List all employees optionally filtered by department or status.
+    List all employees filtered by department or status.
     """
     filtered_df = df.copy()
     if department:
@@ -97,7 +88,7 @@ def list_employees(
 @mcp.tool()
 def get_department_summary() -> dict:
     """
-    Get a complete summary of all departments with salary stats.
+    Get summary of all departments with salary stats.
     """
     summary = {}
     for dept in df["Department"].unique():
@@ -111,25 +102,7 @@ def get_department_summary() -> dict:
     return {"department_summary": summary}
 
 
-# ─── Health Check Route ───
-async def health(request: Request):
-    return JSONResponse({
-        "status": "ok",
-        "message": "MCP Server is running"
-    })
-
-
-# ─── Combine health + MCP ───
-app = Starlette(
-    routes=[
-        Route("/", health),
-        Route("/health", health),
-        Mount("/mcp", app=mcp.streamable_http_app()),
-    ]
-)
-
-
-# ─── Run standalone ───
+# ─── Run ───
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8001))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(mcp.sse_app(), host="0.0.0.0", port=port)
