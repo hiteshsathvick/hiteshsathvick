@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import sys
@@ -8,14 +9,15 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.pipeline import run_query
 from src.data_store import load, reload as reload_store
+from src.mcp_handlers import handle_single
 
 # Warm the in-memory dataset at startup
 load()
 
 app = FastAPI(
     title="Contacts Analysis API",
-    description="Filter, search and validate a 15K-row contacts dataset via natural language queries",
-    version="2.0.0",
+    description="Filter, search and validate a 15K-row contacts dataset via natural language queries (REST + MCP)",
+    version="2.1.0",
 )
 
 app.add_middleware(
@@ -63,3 +65,12 @@ def handle_query(req: QueryRequest):
 def trigger_reload():
     info = reload_store()
     return {"status": "reloaded", **info}
+
+
+@app.post("/mcp")
+async def mcp_handler(request: Request):
+    """JSON-RPC 2.0 MCP endpoint exposing 7 contacts-dataset tools."""
+    body = await request.json()
+    if isinstance(body, list):
+        return JSONResponse([handle_single(req) for req in body])
+    return JSONResponse(handle_single(body))

@@ -29,6 +29,14 @@ def run_query(query: str):
             page_size=args.get("page_size", 25),
         )
 
+    if action == "lookup_email":
+        email = args.get("email", "").strip().lower()
+        match = df[df["email"] == email]
+        if match.empty:
+            return {"found": False, "email": email}
+        record = match.iloc[0].to_dict()
+        return {"found": True, "record": {k: str(v) for k, v in record.items()}}
+
     if action == "search":
         result = search_text(df, args.get("query", ""))
         return paginate(

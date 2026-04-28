@@ -35,12 +35,23 @@ def search_text(df: pd.DataFrame, query: str) -> pd.DataFrame:
     q = str(query).strip()
     if not q:
         return df.iloc[0:0]
-    mask = (
-        df["name"].str.contains(q, case=False, na=False)
-        | df["company"].str.contains(q, case=False, na=False)
-        | df["job_title"].str.contains(q, case=False, na=False)
-        | df["email"].str.contains(q, case=False, na=False)
-    )
+
+    tokens = q.split()
+    # Basic plural handling: strip trailing 's' from words longer than 3 chars
+    tokens = [t[:-1] if len(t) > 3 and t.endswith("s") else t for t in tokens]
+    tokens = [t for t in tokens if t]
+    if not tokens:
+        return df.iloc[0:0]
+
+    mask = pd.Series(True, index=df.index)
+    for token in tokens:
+        token_mask = (
+            df["name"].str.contains(token, case=False, na=False, regex=False)
+            | df["company"].str.contains(token, case=False, na=False, regex=False)
+            | df["job_title"].str.contains(token, case=False, na=False, regex=False)
+            | df["email"].str.contains(token, case=False, na=False, regex=False)
+        )
+        mask &= token_mask
     return df[mask]
 
 
