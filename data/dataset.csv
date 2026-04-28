@@ -1,9 +1,0 @@
-EmployeeID,EmployeeName,Department,Status,ExperienceYears,PerformanceScore,Salary
-1,Amit,HR,Active,2,3,40000
-2,Neha,IT,Active,5,4,70000
-3,Rahul,Finance,Inactive,4,4,65000
-4,Priya,IT,Active,6,5,80000
-5,Kiran,HR,Active,3,3,42000
-6,Anu,Finance,Active,5,4,72000
-7,Varun,IT,Inactive,2,2,50000
-8,Sneha,HR,Active,7,5,60000

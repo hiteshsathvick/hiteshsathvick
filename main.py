@@ -1,21 +1,23 @@
 from src.pipeline import run_query
- 
+
+
 def main():
-    print("🚀 Starting LLM Data Analysis System...\n")
- 
-    # 🔁 Change this query to test different cases
-    query = "Predict salary for an employee"
-    # query = "Show average salary in IT department"
-    # query = "Show salary stats for active HR employees"
- 
-    print("Query:", query)
- 
-    result = run_query(query)
- 
-    print("\nFinal Result:")
-    print(result)
- 
- 
+    print("Starting Contacts Analysis System...\n")
+
+    queries = [
+        "show dataset summary",
+        "top job titles",
+        "top companies",
+        "search for engineer",
+        "show invalid contacts",
+    ]
+
+    for query in queries:
+        print(f"\n--- Query: {query} ---")
+        result = run_query(query)
+        preview = str(result)
+        print(preview[:500] + ("..." if len(preview) > 500 else ""))
+
+
 if __name__ == "__main__":
     main()
- 

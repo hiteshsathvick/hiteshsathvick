@@ -1,37 +1,48 @@
-import pandas as pd
-
 from src.llm_handler import call_llm
-from src.filters import apply_filters
-from src.stats import compute_stats
-from src.model import train_model, predict_salary
+from src.data_store import get_df
+from src.filters import apply_filters, search_text, paginate
+from src.stats import dataset_summary, job_title_distribution, company_distribution
 
 
-def run_query(query):
-    # Load data
-    df = pd.read_csv("data/dataset.csv")
-
-    # Call LLM (mock)
+def run_query(query: str):
+    df = get_df()
     instruction = call_llm(query)
     print("LLM Output:", instruction)
 
-    if not instruction:
-        return "Error in LLM response"
+    action = instruction.get("action")
+    args = instruction.get("args", {}) or {}
 
-    # 🔮 Prediction
-    if instruction["action"] == "predict":
-        trained_model = train_model(df)
-        return predict_salary(
-            trained_model,
-            instruction["experience"],
-            instruction["performance"]
+    if action == "summary":
+        return dataset_summary(df)
+
+    if action == "job_distribution":
+        return job_title_distribution(df, top_n=args.get("top_n", 10))
+
+    if action == "company_distribution":
+        return company_distribution(df, top_n=args.get("top_n", 10))
+
+    if action == "validate":
+        invalid = df[(~df["email_valid"]) | (~df["phone_valid"])]
+        return paginate(
+            invalid,
+            page=args.get("page", 1),
+            page_size=args.get("page_size", 25),
         )
 
-    # 🔍 Filtering
-    if "filter" in instruction:
-        df = apply_filters(df, instruction["filter"])
+    if action == "search":
+        result = search_text(df, args.get("query", ""))
+        return paginate(
+            result,
+            page=args.get("page", 1),
+            page_size=args.get("page_size", 25),
+        )
 
-    # 📊 Stats
-    if instruction["action"] == "stats":
-        return compute_stats(df, instruction["target"])
+    if action == "filter":
+        result = apply_filters(df, args.get("filters", {}))
+        return paginate(
+            result,
+            page=args.get("page", 1),
+            page_size=args.get("page_size", 25),
+        )
 
-    return df.head()
+    return dataset_summary(df)

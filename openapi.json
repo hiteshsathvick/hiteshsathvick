@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "LLM Data Analysis API",
-    "description": "Salary filtering, statistics and prediction via natural language queries",
-    "version": "1.0.0"
+    "title": "Contacts Analysis API",
+    "description": "Filter, search, summarise and validate a 15K-row contacts dataset via natural language queries",
+    "version": "2.0.0"
   },
   "servers": [
     {
@@ -14,7 +14,7 @@
     "/query": {
       "post": {
         "summary": "Handle Query",
-        "description": "Send a natural language query to analyze salary data. Examples: Show average salary in IT department, Predict salary for an employee, Show salary stats for active HR employees",
+        "description": "Send a natural language query about the contacts dataset. Examples: show dataset summary, top job titles, top companies, search for engineer, show invalid contacts.",
         "operationId": "handleQuery",
         "requestBody": {
           "required": true,
@@ -39,6 +39,25 @@
           }
         }
       }
+    },
+    "/reload": {
+      "post": {
+        "summary": "Reload Dataset",
+        "description": "Re-read the source Excel file and rebuild the in-memory parquet cache.",
+        "operationId": "reloadDataset",
+        "responses": {
+          "200": {
+            "description": "Reload completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -49,7 +68,7 @@
         "properties": {
           "query": {
             "type": "string",
-            "description": "Natural language query about salary data"
+            "description": "Natural language query about the contacts dataset"
           }
         }
       },

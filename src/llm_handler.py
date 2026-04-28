@@ -1,33 +1,31 @@
-def call_llm(query):
-    print("⚠️ Using MOCK LLM (no API)")
+def call_llm(query: str) -> dict:
+    """Mock intent parser. Maps a natural-language query to one of the new
+    contact-dataset tool calls. Returns {"action": <name>, "args": {...}}."""
+    print("Using MOCK LLM (no API)")
 
-    query = query.lower()
+    q = (query or "").lower().strip()
 
-    # Prediction case
-    if "predict" in query or "prediction" in query:
-        return {
-            "action": "predict",
-            "experience": 5,
-            "performance": 4
-        }
+    if not q:
+        return {"action": "summary", "args": {}}
 
-    # Default stats case
-    instruction = {
-        "action": "stats",
-        "filter": {},
-        "target": "Salary"
-    }
+    if "summary" in q or "overview" in q or "how many" in q:
+        return {"action": "summary", "args": {}}
 
-    if "it" in query:
-        instruction["filter"]["Department"] = "IT"
-    elif "hr" in query:
-        instruction["filter"]["Department"] = "HR"
-    elif "finance" in query:
-        instruction["filter"]["Department"] = "Finance"
+    if "job title" in q or "job-title" in q or "roles" in q or "titles" in q:
+        return {"action": "job_distribution", "args": {"top_n": 10}}
 
-    if "active" in query:
-        instruction["filter"]["Status"] = "Active"
-    elif "inactive" in query:
-        instruction["filter"]["Status"] = "Inactive"
+    if "company" in q or "companies" in q or "employer" in q:
+        return {"action": "company_distribution", "args": {"top_n": 10}}
 
-    return instruction
+    if "invalid" in q or "validate" in q or "bad email" in q or "bad phone" in q:
+        return {"action": "validate", "args": {"page": 1, "page_size": 25}}
+
+    if "search" in q or "find" in q or "look" in q:
+        term = q
+        for kw in ("search for", "search", "find", "look for", "look up"):
+            if kw in term:
+                term = term.split(kw, 1)[1].strip(" .?!:'\"")
+                break
+        return {"action": "search", "args": {"query": term, "page": 1, "page_size": 25}}
+
+    return {"action": "search", "args": {"query": q, "page": 1, "page_size": 25}}

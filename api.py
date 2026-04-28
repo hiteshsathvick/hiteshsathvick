@@ -1,21 +1,23 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
 import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.pipeline import run_query
+from src.data_store import load, reload as reload_store
+
+# Warm the in-memory dataset at startup
+load()
 
 app = FastAPI(
-    title="LLM Data Analysis API",
-    description="Salary filtering, statistics and prediction via natural language queries",
-    version="1.0.0"
+    title="Contacts Analysis API",
+    description="Filter, search and validate a 15K-row contacts dataset via natural language queries",
+    version="2.0.0",
 )
 
-# ✅ Required for Copilot Studio
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,41 +26,40 @@ app.add_middleware(
 )
 
 
-# ─── Request & Response Models ───
-
 class QueryRequest(BaseModel):
     query: str
+
 
 class QueryResponse(BaseModel):
     query: str
     result: str
 
 
-# ─── Routes ───
-
 @app.get("/")
 def root():
-    return {"status": "ok", "message": "LLM Data Analysis API is running"}
+    return {"status": "ok", "message": "Contacts Analysis API is running"}
 
 
 @app.post("/query", response_model=QueryResponse)
 def handle_query(req: QueryRequest):
     """
     Example queries:
-    - "Predict salary for an employee"
-    - "Show average salary in IT department"
-    - "Show salary stats for active HR employees"
+    - "show dataset summary"
+    - "top job titles"
+    - "top companies"
+    - "search for engineer"
+    - "show invalid contacts"
     """
     try:
         result = run_query(req.query)
-        return QueryResponse(
-            query=req.query,
-            result=str(result)
-        )
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=500,
-            detail="dataset.csv not found. Make sure data/dataset.csv exists."
-        )
+        return QueryResponse(query=req.query, result=str(result))
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/reload")
+def trigger_reload():
+    info = reload_store()
+    return {"status": "reloaded", **info}
