@@ -1,6 +1,6 @@
 import pandas as pd
 
-LIST_PROJECTION = ["name", "email", "company", "job_title"]
+LIST_PROJECTION = ["name", "email", "phone", "address", "company", "job_title"]
 DEFAULT_PAGE_SIZE = 25
 MAX_PAGE_SIZE = 100
 

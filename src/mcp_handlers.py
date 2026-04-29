@@ -10,7 +10,7 @@ from src.stats import dataset_summary, job_title_distribution, company_distribut
 TOOLS = [
     {
         "name": "search_contacts",
-        "description": "Substring search across name, company, job_title and email. Returns paginated results with name, email, company, job_title.",
+        "description": "Substring search across name, company, job_title and email. Returns paginated results with name, email, phone, address, company, job_title.",
         "inputSchema": {
             "type": "object",
             "properties": {
