@@ -34,6 +34,17 @@ TOOLS = [
         },
     },
     {
+        "name": "get_contact_by_phone",
+        "description": "Look up a single contact by phone number. Accepts any format (with or without +, dashes, spaces, parentheses); the digits are extracted and matched against the normalised phone column. Returns the full record.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "phone": {"type": "string", "description": "Phone number in any format, e.g. '+1-878-455-2831' or '8784552831'"},
+            },
+            "required": ["phone"],
+        },
+    },
+    {
         "name": "filter_contacts",
         "description": "Filter contacts by any combination of company, job_title, name_contains, email_contains, has_valid_email, has_valid_phone. Paginated.",
         "inputSchema": {
@@ -110,6 +121,18 @@ def execute_tool(name: str, args: dict) -> dict:
         match = df[df["email"] == email]
         if match.empty:
             return {"found": False, "email": email}
+        record = match.iloc[0].to_dict()
+        return {"found": True, "record": {k: (str(v) if v is not None else None) for k, v in record.items()}}
+
+    if name == "get_contact_by_phone":
+        import re as _re
+        raw = str(args.get("phone", ""))
+        digits = _re.sub(r"\D", "", raw)
+        if not digits:
+            return {"error": "phone is required"}
+        match = df[df["phone_normalised"] == digits]
+        if match.empty:
+            return {"found": False, "phone": raw, "phone_normalised": digits}
         record = match.iloc[0].to_dict()
         return {"found": True, "record": {k: (str(v) if v is not None else None) for k, v in record.items()}}
 

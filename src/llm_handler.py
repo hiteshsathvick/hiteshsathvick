@@ -60,6 +60,13 @@ def call_llm(query: str) -> dict:
     if email_match:
         return {"action": "lookup_email", "args": {"email": email_match.group(0)}}
 
+    # Direct phone match (e.g. "who has phone +1-878-455-2831")
+    phone_match = re.search(r"\+?\d[\d\-\(\)\s\.]{8,}\d", q)
+    if phone_match:
+        digits = re.sub(r"\D", "", phone_match.group(0))
+        if 10 <= len(digits) <= 15:
+            return {"action": "lookup_phone", "args": {"phone": digits}}
+
     # Search: extract the meaningful term from longer phrases
     term = _extract_search_term(q)
     if not term:

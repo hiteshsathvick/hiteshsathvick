@@ -50,6 +50,8 @@ def search_text(df: pd.DataFrame, query: str) -> pd.DataFrame:
             | df["company"].str.contains(token, case=False, na=False, regex=False)
             | df["job_title"].str.contains(token, case=False, na=False, regex=False)
             | df["email"].str.contains(token, case=False, na=False, regex=False)
+            | df["phone"].str.contains(token, case=False, na=False, regex=False)
+            | df["phone_normalised"].str.contains(token, case=False, na=False, regex=False)
         )
         mask &= token_mask
     return df[mask]

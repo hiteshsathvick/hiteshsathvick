@@ -37,6 +37,14 @@ def run_query(query: str):
         record = match.iloc[0].to_dict()
         return {"found": True, "record": {k: str(v) for k, v in record.items()}}
 
+    if action == "lookup_phone":
+        phone_digits = args.get("phone", "").strip()
+        match = df[df["phone_normalised"] == phone_digits]
+        if match.empty:
+            return {"found": False, "phone": phone_digits}
+        record = match.iloc[0].to_dict()
+        return {"found": True, "record": {k: str(v) for k, v in record.items()}}
+
     if action == "search":
         result = search_text(df, args.get("query", ""))
         return paginate(
