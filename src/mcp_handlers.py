@@ -1,10 +1,20 @@
 """Shared MCP tool handlers used by both api.py and mcp_server.py."""
 
 import json
+import re
 
 from src.data_store import get_df
 from src.filters import apply_filters, search_text, paginate
 from src.stats import dataset_summary, job_title_distribution, company_distribution
+
+
+# User-facing columns only (drops internal helpers like phone_normalised, phone_valid)
+PUBLIC_COLUMNS = ["name", "email", "phone", "address", "company", "job_title", "text", "description"]
+
+
+def _public_record(record: dict) -> dict:
+    return {k: (str(record[k]) if record.get(k) is not None else None)
+            for k in PUBLIC_COLUMNS if k in record}
 
 
 TOOLS = [
@@ -24,7 +34,7 @@ TOOLS = [
     },
     {
         "name": "get_contact_by_email",
-        "description": "Look up a single contact by exact email match. Returns the full record including text and description.",
+        "description": "Look up a single contact by exact email match. Returns the FULL record with all eight visible fields: name, email, phone, address, company, job_title, text, description. ALWAYS display all eight fields to the user when answering.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -35,7 +45,7 @@ TOOLS = [
     },
     {
         "name": "get_contact_by_phone",
-        "description": "Look up a single contact by phone number. Accepts any format (with or without +, dashes, spaces, parentheses); the digits are extracted and matched against the normalised phone column. Returns the full record.",
+        "description": "Look up a single contact by phone number. Accepts any format (+, dashes, parentheses, spaces). Returns the FULL record with all eight visible fields: name, email, phone, address, company, job_title, text, description. ALWAYS display all eight fields to the user when answering.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -121,20 +131,17 @@ def execute_tool(name: str, args: dict) -> dict:
         match = df[df["email"] == email]
         if match.empty:
             return {"found": False, "email": email}
-        record = match.iloc[0].to_dict()
-        return {"found": True, "record": {k: (str(v) if v is not None else None) for k, v in record.items()}}
+        return {"found": True, "record": _public_record(match.iloc[0].to_dict())}
 
     if name == "get_contact_by_phone":
-        import re as _re
         raw = str(args.get("phone", ""))
-        digits = _re.sub(r"\D", "", raw)
+        digits = re.sub(r"\D", "", raw)
         if not digits:
             return {"error": "phone is required"}
         match = df[df["phone_normalised"] == digits]
         if match.empty:
             return {"found": False, "phone": raw, "phone_normalised": digits}
-        record = match.iloc[0].to_dict()
-        return {"found": True, "record": {k: (str(v) if v is not None else None) for k, v in record.items()}}
+        return {"found": True, "record": _public_record(match.iloc[0].to_dict())}
 
     if name == "filter_contacts":
         filters = {

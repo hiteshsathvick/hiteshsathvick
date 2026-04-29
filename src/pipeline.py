@@ -3,6 +3,13 @@ from src.data_store import get_df
 from src.filters import apply_filters, search_text, paginate
 from src.stats import dataset_summary, job_title_distribution, company_distribution
 
+PUBLIC_COLUMNS = ["name", "email", "phone", "address", "company", "job_title", "text", "description"]
+
+
+def _public_record(record: dict) -> dict:
+    return {k: (str(record[k]) if record.get(k) is not None else None)
+            for k in PUBLIC_COLUMNS if k in record}
+
 
 def run_query(query: str):
     df = get_df()
@@ -34,16 +41,14 @@ def run_query(query: str):
         match = df[df["email"] == email]
         if match.empty:
             return {"found": False, "email": email}
-        record = match.iloc[0].to_dict()
-        return {"found": True, "record": {k: str(v) for k, v in record.items()}}
+        return {"found": True, "record": _public_record(match.iloc[0].to_dict())}
 
     if action == "lookup_phone":
         phone_digits = args.get("phone", "").strip()
         match = df[df["phone_normalised"] == phone_digits]
         if match.empty:
             return {"found": False, "phone": phone_digits}
-        record = match.iloc[0].to_dict()
-        return {"found": True, "record": {k: str(v) for k, v in record.items()}}
+        return {"found": True, "record": _public_record(match.iloc[0].to_dict())}
 
     if action == "search":
         result = search_text(df, args.get("query", ""))
